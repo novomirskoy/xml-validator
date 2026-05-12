@@ -37,7 +37,7 @@ final class ValidatorTest extends TestCase
     }
 
     #[Test]
-    public function validateValidXmlAndSchemaFromFile(): void
+    public function validateValidXmlWithSchemaFromFile(): void
     {
         // Arrange
         $validator = $this->sut;
@@ -71,7 +71,7 @@ final class ValidatorTest extends TestCase
     }
 
     #[Test]
-    public function validateValidXmlAndSchemaFromString(): void
+    public function validateValidXmlWithSchemaFromString(): void
     {
         // Arrange
         $validator = $this->sut;
@@ -105,7 +105,7 @@ final class ValidatorTest extends TestCase
     }
 
     #[Test]
-    public function validateNotValidXml(): void
+    public function validateInvalidXml(): void
     {
         // Arrange
         $validator = $this->sut;
@@ -133,7 +133,7 @@ final class ValidatorTest extends TestCase
     }
 
     #[Test]
-    public function validateByNotExistingSchema(): void
+    public function validateWithNonExistingSchema(): void
     {
         // Arrange
         $validator = $this->sut;
