@@ -1,45 +1,45 @@
 # Xml validator
 
-Валидация XML документов с помощью XSD схем
+XML document validation using XSD schemas
 
-## Установка
+## Installation
 
-Установите библиотеку с помощью Composer:
+Install the library using Composer:
 
 ```bash
 composer require novomirskoy/xml-validator
 ```
 
-### Требования
+### Requirements
 
-Для работы библиотеки необходимы следующие PHP расширения:
+The following PHP extensions are required for the library to work:
 - `ext-dom`
 - `ext-libxml`
 
-## Использование
+## Usage
 
-Необходимо создать экземпляр класса `Validator` и вызвать метод `validate()`,
-передав в него XML-документ в виде строки и схему. Схема может быть как **строкой**, так и **путём к XSD-файлу**.
-Создать экземпляр схемы можно с помощью именованных конструкторов `Schema::file()`
-или `Schema::string()`, передавая туда путь к файлу или строку со схемой соответственно.
+Create an instance of the `Validator` class and call the `validate()` method,
+passing an XML document as a string and a schema. The schema can be either a **string** or a **path to an XSD file**.
+Create a schema instance using the named constructors `Schema::file()`
+or `Schema::string()`, passing the file path or schema string respectively.
 
-Валидатор не хранит результат валидации, поэтому сразу возвращает объект типа Result, который сообщает,
-была ли валидация успешной, а также возвращает список всех возникших ошибок.
+The validator does not store the validation result, so it immediately returns a Result object that indicates
+whether the validation was successful and returns a list of all errors that occurred.
 
-## Как пользоваться
+## Examples
 
 ```php
-// Пример XML-документа
+// Example XML document
 $xml = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <book>
-    <title>Паттерны проектирования</title>
-    <author>Гамма</author>
+    <title>Design Patterns</title>
+    <author>Gamma</author>
     <year>1994</year>
 </book>
 XML;
 
-// Валидация с использованием XSD схемы из строки
+// Validation using XSD schema from string
 $xsdSchema = <<<XSD
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
@@ -66,7 +66,7 @@ if (!$result->isValid()) {
     }
 }
 
-// Валидация с использованием XSD схемы из файла
+// Validation using XSD schema from file
 $result = new Validator()->validate(
     xml: $xml,
     schema: Schema::file('/path/to/schema.xsd'),
@@ -78,3 +78,7 @@ if (!$result->isValid()) {
     }
 }
 ```
+
+## Documentation
+
+For the full documentation in Russian, please see [docs/README.ru.md](docs/README.ru.md).
