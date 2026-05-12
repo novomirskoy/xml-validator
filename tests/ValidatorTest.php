@@ -180,4 +180,18 @@ final class ValidatorTest extends TestCase
         // Act
         $validator->validate(xml: $xml, schema: Schema::file(__DIR__ . '/data/xsd/phpunit.xsd'));
     }
+
+    #[Test]
+    public function validateXmlWithoutSchema(): void
+    {
+        // Arrange
+        $validator = $this->sut;
+        $xml = '<foo></foo>';
+
+        // Act
+        $result = $validator->validate(xml: $xml);
+
+        // Assert
+        $this->assertTrue($result->isValid());
+    }
 }

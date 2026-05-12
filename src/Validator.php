@@ -9,6 +9,7 @@ use InvalidArgumentException;
 
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
+use function trim;
 
 use const LIBXML_COMPACT;
 use const LIBXML_NONET;
@@ -18,7 +19,7 @@ final class Validator
 {
     public function validate(
         string $xml,
-        ?Schema $schema,
+        ?Schema $schema = null,
     ): Result {
         if ('' === trim(string: $xml)) {
             throw new InvalidArgumentException(message: 'Строка не содержит валидный XML, т.к. является пустой');
