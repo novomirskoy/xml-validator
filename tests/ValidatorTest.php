@@ -6,6 +6,7 @@ namespace Tests\Novomirskoy\XmlValidator;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Novomirskoy\XmlValidator\Schema;
@@ -20,30 +21,26 @@ use function sprintf;
 final class ValidatorTest extends TestCase
 {
     private Validator $sut;
-    /** @var non-empty-string */
-    private string $schemaPath;
-    /** @var non-empty-string */
-    private string $schemaContent;
 
     protected function setUp(): void
     {
         $this->sut = new Validator();
-        $this->schemaPath = __DIR__ . '/data/xsd/phpunit.xsd';
-        $schemaContent = file_get_contents($this->schemaPath);
-        if (false === $schemaContent || '' === $schemaContent) {
-            throw new RuntimeException(sprintf('Схема по пути %s отсутствует или является пустым файлом', $this->schemaPath));
-        }
-        $this->schemaContent = $schemaContent;
     }
 
     #[Test]
-    public function validateValidXmlWithSchemaFromFile(): void
+    #[DataProvider('validXmlProvider')]
+    public function validateValidXmlWithSchemaFromFile(string $xml, Schema $schema): void
     {
-        // Arrange
-        $validator = $this->sut;
-
         // Act
-        $xml = <<<'XML'
+        $result = $this->sut->validate(xml: $xml, schema: $schema);
+
+        // Assert
+        $this->assertTrue($result->isValid());
+    }
+
+    public static function validXmlProvider(): iterable
+    {
+        $phpunitXml = <<<'XML'
             <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                      xsi:noNamespaceSchemaLocation="https://phpunit.de"
                      bootstrap="vendor/autoload.php"
@@ -64,44 +61,68 @@ final class ValidatorTest extends TestCase
                 </source>
             </phpunit>
         XML;
-        $result = $validator->validate(xml: $xml, schema: Schema::file($this->schemaPath));
 
-        // Assert
-        $this->assertTrue($result->isValid());
-    }
+        $phpbuXml = <<<'XML'
+            <phpbu xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:noNamespaceSchemaLocation="https://www.phpbu.de/schema/6.0/phpbu.xsd"
+                   verbose="true">
 
-    #[Test]
-    public function validateValidXmlWithSchemaFromString(): void
-    {
-        // Arrange
-        $validator = $this->sut;
+              <logging>
+                <log type="json" target="/tmp/logfile.json"/>
+              </logging>
 
-        // Act
-        $xml = <<<'XML'
-            <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                     xsi:noNamespaceSchemaLocation="https://phpunit.de"
-                     bootstrap="vendor/autoload.php"
-                     cacheDirectory=".phpunit.cache"
-                     requireCoverageMetadata="true"
-                     colors="true">
+              <backups>
+                <backup name="myAppDB">
+                  <!-- data to backup -->
+                  <source type="mysql">
+                    <option name="databases" value="dbname"/>
+                    <option name="tables" value=""/>
+                    <option name="ignoreTables" value=""/>
+                    <option name="structureOnly" value="dbname.table1,dbname.table2"/>
+                  </source>
 
-                <testsuites>
-                    <testsuite name="Default">
-                        <directory>tests</directory>
-                    </testsuite>
-                </testsuites>
+                  <!-- where should the backup be stored -->
+                  <target dirname="/tmp/backup" filename="mysqldump-%Y%m%d-%H%i.sql" compress="bzip2"/>
 
-                <source>
-                    <include>
-                        <directory>src</directory>
-                    </include>
-                </source>
-            </phpunit>
+                  <!-- do some sanity checks to make sure everything worked as planned -->
+                  <check type="sizemin" value="2M"/>
+
+                  <!-- sync backup to some location or service -->
+                  <sync type="sftp">
+                    <option name="host" value="example.com"/>
+                    <option name="user" value="user.name"/>
+                    <option name="password" value="topsecret"/>
+                    <option name="path" value="some/dir"/>
+                  </sync>
+
+                  <!-- deletes old backups -->
+                  <cleanup type="capacity">
+                    <option name="size" value="100M"/>
+                  </cleanup>
+                </backup>
+              </backups>
+            </phpbu>
         XML;
-        $result = $validator->validate(xml: $xml, schema: Schema::string($this->schemaContent));
 
-        // Assert
-        $this->assertTrue($result->isValid());
+        yield 'validate phpunit xml with schema from file' => [
+            'xml' => $phpunitXml,
+            'schema' => Schema::file(__DIR__ . '/data/xsd/phpunit.xsd'),
+        ];
+
+        yield 'validate phpunit xml with schema from string' => [
+            'xml' => $phpunitXml,
+            'schema' => Schema::string(file_get_contents(__DIR__ . '/data/xsd/phpunit.xsd')),
+        ];
+
+        yield 'validate phpbu xml with schema from file' => [
+            'xml' => $phpbuXml,
+            'schema' => Schema::file(__DIR__ . '/data/xsd/phpbu.xsd'),
+        ];
+
+        yield 'validate phpbu xml with schema from string' => [
+            'xml' => $phpbuXml,
+            'schema' => Schema::string(file_get_contents(__DIR__ . '/data/xsd/phpbu.xsd')),
+        ];
     }
 
     #[Test]
@@ -126,7 +147,7 @@ final class ValidatorTest extends TestCase
                 </teztsuites>
             </phpunit>
         XML;
-        $result = $validator->validate(xml: $xml, schema: Schema::file($this->schemaPath));
+        $result = $validator->validate(xml: $xml, schema: Schema::file(__DIR__ . '/data/xsd/phpunit.xsd'));
 
         // Assert
         $this->assertFalse($result->isValid());
@@ -143,7 +164,7 @@ final class ValidatorTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         // Act
-        $validator->validate(xml: $xml, schema: Schema::file($this->schemaPath));
+        $validator->validate(xml: $xml, schema: Schema::file(__DIR__ . '/data/xsd/phpunit.xsd'));
     }
 
     #[Test]
@@ -157,6 +178,6 @@ final class ValidatorTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         // Act
-        $validator->validate(xml: $xml, schema: Schema::file($this->schemaPath));
+        $validator->validate(xml: $xml, schema: Schema::file(__DIR__ . '/data/xsd/phpunit.xsd'));
     }
 }
